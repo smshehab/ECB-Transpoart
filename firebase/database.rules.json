@@ -1,7 +1,7 @@
 {
   "rules": {
     ".read": false,
-    ".write": false,
+        ".write": "auth != null && auth.token.role === 'driver' && root.child('driver_assignments').child(auth.uid).child('busId').val() === $busId && root.child('driver_assignments').child(auth.uid).child('activeTripId').val() === (newData.exists() ? newData.child('tripId').val() : data.child('tripId').val()) && (newData.exists() ? newData.child('driverId').val() === auth.uid : data.child('driverId').val() === auth.uid)",
     "live_buses": {
       "$busId": {
         ".read": "auth != null",
