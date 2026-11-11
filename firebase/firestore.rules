@@ -42,7 +42,7 @@ service cloud.firestore {
     }
 
     match /trips/{tripId} {
-      allow read: if signedIn();
+      allow read: if isAdmin() || (signedIn() && resource.data.driverId == request.auth.uid);
       allow create, delete: if isAdmin();
       allow update: if isAdmin() || (signedIn() && request.auth.token.role == 'driver' && resource.data.driverId == request.auth.uid
         && resource.data.status in ['scheduled', 'active', 'paused']
