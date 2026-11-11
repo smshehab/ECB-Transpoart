@@ -24,20 +24,22 @@ GoRouter createAppRouter({required bool firebaseReady, Object? firebaseError}) {
       final user = FirebaseAuth.instance.currentUser;
       final publicPaths = {'/', '/login', '/driver/login', '/register'};
       if (user == null) {
-        return publicPaths.contains(path) ? null : '/';
+        return path == '/access-denied' ? '/' : publicPaths.contains(path) ? null : '/';
       }
 
       final token = await user.getIdTokenResult();
       final role = token.claims?['role'];
       final isDriver = role == 'driver';
       final isPassenger = role == null || role == 'passenger';
+      final isAdmin = role == 'transport_admin' || role == 'super_admin';
+      if (isAdmin) return path == '/access-denied' ? null : '/access-denied';
       final driverPaths = {'/driver', '/driver/trips', '/driver/gps'};
       final passengerPaths = {'/passenger', '/map', '/routes', '/notifications', '/announcements'};
 
       if (publicPaths.contains(path)) {
         if (isDriver) return '/driver';
         if (isPassenger) return '/passenger';
-        return '/';
+        return '/access-denied';
       }
       if (driverPaths.contains(path)) return isDriver ? null : '/';
       if (passengerPaths.contains(path)) return isPassenger ? null : '/';
@@ -45,6 +47,7 @@ GoRouter createAppRouter({required bool firebaseReady, Object? firebaseError}) {
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => _WelcomeScreen(firebaseReady: firebaseReady, firebaseError: firebaseError)),
+      GoRoute(path: '/access-denied', builder: (context, state) => const _MobileAccessDeniedScreen()),
       GoRoute(path: '/login', builder: (context, state) => const AuthScreen(register: false)),
       GoRoute(path: '/driver/login', builder: (context, state) => const AuthScreen(register: false, driverMode: true)),
       GoRoute(path: '/register', builder: (context, state) => const AuthScreen(register: true)),
@@ -98,4 +101,30 @@ class _WelcomeScreen extends StatelessWidget {
       ]),
     )))));
   }
+}
+
+class _MobileAccessDeniedScreen extends StatelessWidget {
+  const _MobileAccessDeniedScreen();
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, size: 48),
+                const SizedBox(height: 12),
+                const Text('This account cannot use the mobile passenger or driver app.'),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: () => FirebaseAuth.instance.signOut(),
+                  child: const Text('Sign out'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 }
