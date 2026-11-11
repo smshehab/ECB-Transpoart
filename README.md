@@ -37,7 +37,7 @@ Passenger accounts can self-register. Drivers and administrators must be provisi
 
 - Passenger email/password sign-up, sign-in, password reset, route/announcement feed, live bus map
 - Driver claim-verified sign-in, assigned trip status transitions, foreground/background location configuration, visible GPS sharing controls
-- Admin claim-verified sign-in, bus/route/schedule/announcement/driver CRUD foundation, trip/user read-only monitoring, tracking assignment management
+- Admin claim-verified sign-in, bus/route/schedule/announcement/driver/trip CRUD foundation, user read-only monitoring, tracking assignment management
 - FCM token registration and foreground message display
 - Firestore/Realtime Database/Storage rule baselines and Firestore emulator security tests
 
