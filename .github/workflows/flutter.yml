@@ -15,6 +15,9 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Generate Flutter platform scaffolding
+        working-directory: apps/mobile
+        run: flutter create --platforms=android,ios,web --org com.ecbtransport .
       - name: Install dependencies
         working-directory: apps/mobile
         run: flutter pub get
@@ -27,6 +30,9 @@ jobs:
       - name: Unit tests
         working-directory: apps/mobile
         run: flutter test
+      - name: Android debug build
+        working-directory: apps/mobile
+        run: flutter build apk --debug --dart-define-from-file=../../firebase/firebase_config.example.json
 
   admin-web:
     runs-on: ubuntu-latest
@@ -36,6 +42,9 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Generate Flutter web scaffolding
+        working-directory: apps/admin_web
+        run: flutter create --platforms=web .
       - name: Install dependencies
         working-directory: apps/admin_web
         run: flutter pub get
@@ -47,4 +56,4 @@ jobs:
         run: flutter analyze
       - name: Web build
         working-directory: apps/admin_web
-        run: flutter build web
+        run: flutter build web --dart-define-from-file=../../firebase/firebase_config.example.json
