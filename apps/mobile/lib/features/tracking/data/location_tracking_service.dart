@@ -64,7 +64,7 @@ class LocationTrackingService {
         'driverId': user.uid,
         'status': 'active',
       });
-    }, onError: (Object error) {
+    }, onError: (_) {
       unawaited(stop());
     });
   }
