@@ -38,7 +38,8 @@ class TripRepository {
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(ref);
       final data = snapshot.data();
-      if (!snapshot.exists || data == null || data['driverId'] != uid || data['status'] != expected) {
+      final statusMatches = completed ? data != null && ['active', 'paused'].contains(data['status']) : data != null && data['status'] == expected;
+      if (!snapshot.exists || data == null || data['driverId'] != uid || !statusMatches) {
         throw StateError('Trip state changed or assignment is invalid.');
       }
       transaction.update(ref, {
