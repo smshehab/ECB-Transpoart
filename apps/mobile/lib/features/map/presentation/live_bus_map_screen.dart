@@ -25,13 +25,14 @@ class LiveBusMapScreen extends StatelessWidget {
               final updatedAt = (data['updatedAt'] as num?)?.toInt();
               if (lat == null || lon == null || lat < -90 || lat > 90 || lon < -180 || lon > 180) continue;
               final stale = updatedAt == null || DateTime.now().millisecondsSinceEpoch - updatedAt > const Duration(minutes: 2).inMilliseconds;
+              final paused = data['status'] != 'active';
               markers.add(Marker(
                 point: LatLng(lat, lon),
                 width: 120,
                 height: 56,
                 child: Column(children: [
-                  Icon(Icons.directions_bus, color: stale ? Colors.grey : Colors.blue, size: 30),
-                  Text(stale ? 'Stale bus' : 'Bus ${entry.key}', style: const TextStyle(fontSize: 10, backgroundColor: Colors.white)),
+                  Icon(Icons.directions_bus, color: stale || paused ? Colors.grey : Colors.blue, size: 30),
+                  Text(stale ? 'Stale bus' : paused ? 'Paused bus' : 'Bus ${entry.key}', style: const TextStyle(fontSize: 10, backgroundColor: Colors.white)),
                 ]),
               ));
             }
