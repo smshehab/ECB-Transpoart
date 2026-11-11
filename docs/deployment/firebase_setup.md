@@ -12,9 +12,19 @@
 
 ## Authentication and roles
 
-Enable Email/Password authentication. Passenger self-registration creates a passenger profile. Driver and administrator accounts must be provisioned by a trusted Firebase administrative process and assigned custom claims (`driver`, `transport_admin`, or `super_admin`). The client never writes custom claims. The driver app verifies the `driver` claim before showing its workspace; the web admin verifies an administrator claim before showing management tools.
+ECB Transport supports only two authenticated roles: `admin` and `user`. Guest access is unauthenticated and limited to public read operations.
 
-The Realtime Database `driver_assignments/{uid}` mirror must be written by an administrator with the assigned `busId` and active `activeTripId`. The admin web tool checks the Firestore trip is active and that its driver and bus IDs match before activating the RTDB assignment. The driver cannot set these values; after completing a trip, the driver can only clear their own active trip field.
+New registrations use Firebase Email/Password Authentication and create a Firestore profile with `role: user`. This profile field is not a privilege grant. The Admin Web dashboard and Firebase security rules grant administrator permissions only when the Firebase ID token contains the trusted custom claim `role: admin`.
+
+Provision existing accounts from a trusted workstation with the Firebase Admin SDK utility:
+
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS = "C:\secure\firebase-admin-service-account.json"
+py tools/provision_user_role.py --email "admin@example.com" --role admin
+py tools/provision_user_role.py --email "user@example.com" --role user
+```
+
+Legacy claims such as `driver`, `passenger`, `transport_admin`, and `super_admin` are not accepted as application roles. Re-provision existing accounts as `admin` or `user`; users must sign out and sign in again after role changes. Never place service-account credentials in the client app or repository.
 
 ## Push notifications
 
