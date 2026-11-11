@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'trip_providers.dart';
+import '../../tracking/presentation/tracking_providers.dart';
 
 class DriverTripScreen extends ConsumerWidget {
   const DriverTripScreen({super.key});
@@ -31,10 +32,26 @@ class DriverTripScreen extends ConsumerWidget {
                     onSelected: (action) async {
                       try {
                         final repository = ref.read(tripRepositoryProvider);
-                        if (action == 'start') await repository.startTrip(tripId: doc.id);
-                        if (action == 'pause') await repository.pauseTrip(tripId: doc.id);
-                        if (action == 'resume') await repository.resumeTrip(tripId: doc.id);
-                        if (action == 'complete') await repository.completeTrip(tripId: doc.id);
+                        if (action == 'start') {
+                          await repository.startTrip(tripId: doc.id);
+                          final busId = data['busId'] as String?;
+                          if (busId == null || busId.isEmpty) throw StateError('This trip has no assigned bus. Contact transport administration.');
+                          await ref.read(locationTrackingServiceProvider).start(busId: busId, tripId: doc.id);
+                        }
+                        if (action == 'pause') {
+                          await repository.pauseTrip(tripId: doc.id);
+                          await ref.read(locationTrackingServiceProvider).stop();
+                        }
+                        if (action == 'resume') {
+                          await repository.resumeTrip(tripId: doc.id);
+                          final busId = data['busId'] as String?;
+                          if (busId == null || busId.isEmpty) throw StateError('This trip has no assigned bus.');
+                          await ref.read(locationTrackingServiceProvider).start(busId: busId, tripId: doc.id);
+                        }
+                        if (action == 'complete') {
+                          await repository.completeTrip(tripId: doc.id);
+                          await ref.read(locationTrackingServiceProvider).stop();
+                        }
                       } catch (error) {
                         if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
                       }
