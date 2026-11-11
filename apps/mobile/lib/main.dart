@@ -22,11 +22,14 @@ Future<void> main() async {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     try {
       final siteKey = EcbFirebaseOptions.appCheckSiteKey;
-      await FirebaseAppCheck.instance.activate(
-        androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-        appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
-        if (kIsWeb && siteKey.isNotEmpty) webProvider: ReCaptchaV3Provider(siteKey),
-      );
+      if (kIsWeb && siteKey.isNotEmpty) {
+        await FirebaseAppCheck.instance.activate(webProvider: ReCaptchaV3Provider(siteKey));
+      } else if (!kIsWeb) {
+        await FirebaseAppCheck.instance.activate(
+          androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+          appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
+        );
+      }
     } catch (_) {}
     firebaseReady = true;
   } catch (error) {
