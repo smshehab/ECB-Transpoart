@@ -47,7 +47,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           }
         }
       }
-      try { await ref.read(pushNotificationServiceProvider).initializeForCurrentUser(); } catch (_) {}
+      try {
+        await ref.read(pushNotificationServiceProvider).initializeForCurrentUser();
+      } catch (error) {
+        if (mounted) setState(() => _error = 'Signed in, but notification setup failed: $error');
+      }
       if (mounted) context.go(widget.driverMode ? '/driver' : '/passenger');
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
