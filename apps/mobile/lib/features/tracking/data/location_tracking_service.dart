@@ -11,6 +11,7 @@ class LocationTrackingService {
   final FirebaseDatabase _database;
   final FirebaseAuth _auth;
   StreamSubscription<Position>? _subscription;
+  String? _activeBusId;
 
   Future<void> start({required String busId, required String tripId}) async {
     final user = _auth.currentUser;
@@ -24,6 +25,7 @@ class LocationTrackingService {
     }
 
     await stop();
+    _activeBusId = busId;
     final LocationSettings settings;
     if (defaultTargetPlatform == TargetPlatform.android) {
       settings = AndroidSettings(
@@ -67,8 +69,18 @@ class LocationTrackingService {
     });
   }
 
-  Future<void> stop() async {
+  Future<void> stop({bool completed = false}) async {
     await _subscription?.cancel();
     _subscription = null;
+    final busId = _activeBusId;
+    _activeBusId = null;
+    if (busId != null && _auth.currentUser != null) {
+      final reference = _database.ref('live_buses/$busId');
+      if (completed) {
+        await reference.remove();
+      } else {
+        await reference.update({'status': 'paused', 'updatedAt': ServerValue.timestamp});
+      }
+    }
   }
 }
