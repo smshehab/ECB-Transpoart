@@ -50,10 +50,13 @@ class _AdminCrudScreenState extends State<AdminCrudScreen> {
     }
   }
 
+  bool get _readOnly => widget.collection == 'users' || widget.collection == 'trips';
+
   @override
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Row(children: [Expanded(child: TextField(controller: _name, decoration: InputDecoration(labelText: 'New ${widget.title.toLowerCase()} name'))), const SizedBox(width: 8), FilledButton(onPressed: _saving ? null : _create, child: const Text('Add'))]),
+      if (!_readOnly) Row(children: [Expanded(child: TextField(controller: _name, decoration: InputDecoration(labelText: 'New ${widget.title.toLowerCase()} name'))), const SizedBox(width: 8), FilledButton(onPressed: _saving ? null : _create, child: const Text('Add'))]),
+      if (_readOnly) Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(widget.collection == 'users' ? 'User accounts are read-only here. Account provisioning and privileged role changes require a trusted administrative process.' : 'Trip monitoring is read-only. Drivers change their own trip status through the driver application.')),
       const SizedBox(height: 16),
       Expanded(child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance.collection(widget.collection).orderBy('createdAt', descending: true).snapshots(),
@@ -66,7 +69,7 @@ class _AdminCrudScreenState extends State<AdminCrudScreen> {
             return Card(child: ListTile(
               title: Text(doc.data()['name'] as String? ?? doc.id),
               subtitle: Text(doc.id),
-              trailing: Wrap(children: [
+              trailing: _readOnly ? null : Wrap(children: [
                 IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _edit(doc)),
                 IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async {
                 try { await doc.reference.delete(); }
