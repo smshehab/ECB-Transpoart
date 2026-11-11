@@ -20,6 +20,11 @@ Future<void> main() async {
   try {
     await Firebase.initializeApp(options: EcbFirebaseOptions.current);
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    FirebaseMessaging.onMessage.listen((message) {
+      final title = message.notification?.title ?? 'Transport update';
+      final body = message.notification?.body ?? '';
+      scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(content: Text(body.isEmpty ? title : '$title: $body')));
+    });
     try {
       final siteKey = EcbFirebaseOptions.appCheckSiteKey;
       if (kIsWeb && siteKey.isNotEmpty) {
