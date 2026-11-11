@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'auth_providers.dart';
 import '../../notifications/presentation/notification_providers.dart';
+import 'auth_providers.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({required this.register, this.driverMode = false, super.key});
