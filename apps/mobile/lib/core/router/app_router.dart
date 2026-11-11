@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,20 +14,64 @@ import '../../features/tracking/presentation/driver_gps_screen.dart';
 import '../../features/trips/presentation/driver_trip_screen.dart';
 
 GoRouter createAppRouter({required bool firebaseReady, Object? firebaseError}) {
-  return GoRouter(initialLocation: '/', routes: [
-    GoRoute(path: '/', builder: (context, state) => _WelcomeScreen(firebaseReady: firebaseReady, firebaseError: firebaseError)),
-    GoRoute(path: '/login', builder: (context, state) => const AuthScreen(register: false)),
-    GoRoute(path: '/driver/login', builder: (context, state) => const AuthScreen(register: false, driverMode: true)),
-    GoRoute(path: '/register', builder: (context, state) => const AuthScreen(register: true)),
-    GoRoute(path: '/passenger', builder: (context, state) => const PassengerHomeScreen()),
-    GoRoute(path: '/driver', builder: (context, state) => const DriverDashboardScreen()),
-    GoRoute(path: '/driver/trips', builder: (context, state) => const DriverTripScreen()),
-    GoRoute(path: '/driver/gps', builder: (context, state) => const DriverGpsScreen()),
-    GoRoute(path: '/map', builder: (context, state) => const LiveBusMapScreen()),
-    GoRoute(path: '/routes', builder: (context, state) => const PassengerDataScreen(collection: 'routes', title: 'Routes')),
-    GoRoute(path: '/notifications', builder: (context, state) => const PassengerNotificationsScreen()),
-    GoRoute(path: '/announcements', builder: (context, state) => const PassengerDataScreen(collection: 'announcements', title: 'Announcements')),
-  ]);
+  final authRefresh = _AuthRefreshNotifier();
+  return GoRouter(
+    initialLocation: '/',
+    refreshListenable: authRefresh,
+    redirect: (context, state) async {
+      if (!firebaseReady) return state.matchedLocation == '/' ? null : '/';
+      final path = state.matchedLocation;
+      final user = FirebaseAuth.instance.currentUser;
+      final publicPaths = {'/', '/login', '/driver/login', '/register'};
+      if (user == null) {
+        return publicPaths.contains(path) ? null : '/';
+      }
+
+      final token = await user.getIdTokenResult();
+      final role = token.claims?['role'];
+      final isDriver = role == 'driver';
+      final isPassenger = role == null || role == 'passenger';
+      final driverPaths = {'/driver', '/driver/trips', '/driver/gps'};
+      final passengerPaths = {'/passenger', '/map', '/routes', '/notifications', '/announcements'};
+
+      if (publicPaths.contains(path)) {
+        if (isDriver) return '/driver';
+        if (isPassenger) return '/passenger';
+        return '/';
+      }
+      if (driverPaths.contains(path)) return isDriver ? null : '/';
+      if (passengerPaths.contains(path)) return isPassenger ? null : '/';
+      return '/';
+    },
+    routes: [
+      GoRoute(path: '/', builder: (context, state) => _WelcomeScreen(firebaseReady: firebaseReady, firebaseError: firebaseError)),
+      GoRoute(path: '/login', builder: (context, state) => const AuthScreen(register: false)),
+      GoRoute(path: '/driver/login', builder: (context, state) => const AuthScreen(register: false, driverMode: true)),
+      GoRoute(path: '/register', builder: (context, state) => const AuthScreen(register: true)),
+      GoRoute(path: '/passenger', builder: (context, state) => const PassengerHomeScreen()),
+      GoRoute(path: '/driver', builder: (context, state) => const DriverDashboardScreen()),
+      GoRoute(path: '/driver/trips', builder: (context, state) => const DriverTripScreen()),
+      GoRoute(path: '/driver/gps', builder: (context, state) => const DriverGpsScreen()),
+      GoRoute(path: '/map', builder: (context, state) => const LiveBusMapScreen()),
+      GoRoute(path: '/routes', builder: (context, state) => const PassengerDataScreen(collection: 'routes', title: 'Routes')),
+      GoRoute(path: '/notifications', builder: (context, state) => const PassengerNotificationsScreen()),
+      GoRoute(path: '/announcements', builder: (context, state) => const PassengerDataScreen(collection: 'announcements', title: 'Announcements')),
+    ],
+  );
+}
+
+class _AuthRefreshNotifier extends ChangeNotifier {
+  _AuthRefreshNotifier() {
+    _subscription = FirebaseAuth.instance.authStateChanges().listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<User?> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }
 
 class _WelcomeScreen extends StatelessWidget {
