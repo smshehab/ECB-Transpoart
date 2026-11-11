@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'core/router/app_router.dart';
 
+final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 class EcbTransportApp extends StatelessWidget {
   const EcbTransportApp({required this.firebaseReady, this.firebaseError, super.key});
 
@@ -11,6 +13,7 @@ class EcbTransportApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
+      scaffoldMessengerKey: scaffoldMessengerKey,
       title: 'ECB Transport',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
