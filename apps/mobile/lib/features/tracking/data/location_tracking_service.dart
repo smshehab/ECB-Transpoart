@@ -16,6 +16,14 @@ class LocationTrackingService {
   Future<void> start({required String busId, required String tripId}) async {
     final user = _auth.currentUser;
     if (user == null) throw StateError('Driver sign-in is required.');
+    final assignmentSnapshot = await _database.ref('driver_assignments/${user.uid}').get();
+    final assignmentValue = assignmentSnapshot.value;
+    if (assignmentValue is! Map) throw StateError('No active driver assignment found.');
+    final assignment = Map<Object?, Object?>.from(assignmentValue);
+    if (assignment['busId'] != busId || assignment['activeTripId'] != tripId) {
+      throw StateError('GPS sharing is limited to the bus and trip assigned to this driver.');
+    }
+
     if (!await Geolocator.isLocationServiceEnabled()) throw StateError('Enable device location services.');
 
     var permission = await Geolocator.checkPermission();
