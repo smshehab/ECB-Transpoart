@@ -86,7 +86,11 @@ class _AdminCrudScreenState extends State<AdminCrudScreen> {
   @override
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      if (!_readOnly) Row(children: [Expanded(child: TextField(controller: _name, decoration: InputDecoration(labelText: 'New ${widget.title.toLowerCase()} name'))), const SizedBox(width: 8), FilledButton(onPressed: _saving ? null : _create, child: const Text('Add'))]),
+      if (!_readOnly) TextField(controller: _name, decoration: InputDecoration(labelText: 'New ${widget.title.toLowerCase()} name')),
+      if (!_readOnly) const SizedBox(height: 8),
+      if (!_readOnly) TextField(controller: _details, minLines: 2, maxLines: 5, decoration: const InputDecoration(labelText: 'Additional fields (JSON object)', hintText: '{"capacity": 40, "status": "active"}')),
+      if (!_readOnly) const SizedBox(height: 8),
+      if (!_readOnly) Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: _saving ? null : _create, child: const Text('Add'))),
       if (_readOnly) Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(widget.collection == 'users' ? 'User accounts are read-only here. Account provisioning and privileged role changes require a trusted administrative process.' : 'Trip monitoring is read-only. Drivers change their own trip status through the driver application.')),
       const SizedBox(height: 16),
       Expanded(child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
