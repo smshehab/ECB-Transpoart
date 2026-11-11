@@ -1,0 +1,46 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "live_buses": {
+      "$busId": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('driver_assignments').child(auth.uid).child('busId').val() === $busId && newData.child('driverId').val() === auth.uid && root.child('driver_assignments').child(auth.uid).child('activeTripId').val() === newData.child('tripId').val()",
+        ".validate": "newData.hasChildren(['latitude', 'longitude', 'updatedAt', 'tripId', 'driverId', 'status'])",
+        "latitude": {
+          ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
+        },
+        "longitude": {
+          ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"
+        },
+        "speed": {
+          ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0)"
+        },
+        "heading": {
+          ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 360)"
+        },
+        "accuracy": {
+          ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0)"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "tripId": {
+          ".validate": "newData.isString()"
+        },
+        "driverId": {
+          ".validate": "newData.isString()"
+        },
+        "status": {
+          ".validate": "newData.val() in ['active', 'paused']"
+        }
+      }
+    },
+    "driver_assignments": {
+      "$driverId": {
+        ".read": "auth != null && (auth.uid === $driverId || auth.token.role === 'transport_admin' || auth.token.role === 'super_admin')",
+        ".write": "auth != null && (auth.token.role === 'transport_admin' || auth.token.role === 'super_admin')"
+      }
+    }
+  }
+}
