@@ -33,9 +33,9 @@ class DriverTripScreen extends ConsumerWidget {
                       try {
                         final repository = ref.read(tripRepositoryProvider);
                         if (action == 'start') {
-                          await repository.startTrip(tripId: doc.id);
                           final busId = data['busId'] as String?;
                           if (busId == null || busId.isEmpty) throw StateError('This trip has no assigned bus. Contact transport administration.');
+                          await repository.startTrip(tripId: doc.id);
                           await ref.read(locationTrackingServiceProvider).start(busId: busId, tripId: doc.id);
                         }
                         if (action == 'pause') {
