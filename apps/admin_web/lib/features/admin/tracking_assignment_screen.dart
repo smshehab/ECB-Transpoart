@@ -25,10 +25,18 @@ class _TrackingAssignmentScreenState extends State<TrackingAssignmentScreen> {
     if (driverId.isEmpty || busId.isEmpty || tripId.isEmpty) { setState(() => _message = 'Enter driver UID, bus ID and active trip ID.'); return; }
     setState(() { _busy = true; _message = null; });
     try {
-      final trip = await FirebaseFirestore.instance.collection('trips').doc(tripId).get();
+      final firestore = FirebaseFirestore.instance;
+      final trip = await firestore.collection('trips').doc(tripId).get();
       final data = trip.data();
       if (!trip.exists || data == null || data['status'] != 'active' || data['driverId'] != driverId || data['busId'] != busId) {
         throw StateError('Trip must exist, be active, and match the driver and bus IDs.');
+      }
+      final bus = await firestore.collection('buses').doc(busId).get();
+      final driverById = await firestore.collection('drivers').doc(driverId).get();
+      final driverByUid = await firestore.collection('drivers').where('uid', isEqualTo: driverId).limit(1).get();
+      if (!bus.exists) throw StateError('The selected bus does not exist in Bus Management.');
+      if (!driverById.exists && driverByUid.docs.isEmpty) {
+        throw StateError('The selected driver does not exist in Driver Management. Store the Firebase UID in the driver document ID or uid field.');
       }
       await FirebaseDatabase.instance.ref('driver_assignments/$driverId').set({
         'busId': busId,
