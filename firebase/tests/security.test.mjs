@@ -32,3 +32,18 @@ test('only administrators can create fleet records', async () => {
   await assertFails(setDoc(doc(passengerDb, 'buses/bus-2'), { name: 'Unauthorized' }));
   await assertSucceeds(setDoc(doc(adminDb, 'buses/bus-3'), { name: 'Authorized' }));
 });
+
+
+test('only the assigned driver claim can perform permitted trip state changes', async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), 'trips/trip-1'), {
+      driverId: 'driver-1', busId: 'bus-1', status: 'scheduled',
+    });
+  });
+  const passengerDb = env.authenticatedContext('driver-1', { role: 'passenger' }).firestore();
+  const driverDb = env.authenticatedContext('driver-1', { role: 'driver' }).firestore();
+  await assertFails(updateDoc(doc(passengerDb, 'trips/trip-1'), { status: 'active' }));
+  await assertSucceeds(updateDoc(doc(driverDb, 'trips/trip-1'), { status: 'active', startedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(driverDb, 'trips/trip-1'), { busId: 'other-bus' }));
+  await assertSucceeds(updateDoc(doc(driverDb, 'trips/trip-1'), { status: 'completed', completedAt: serverTimestamp() }));
+});
