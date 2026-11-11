@@ -47,9 +47,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           }
         }
       }
-      if (!widget.driverMode) {
-        try { await ref.read(pushNotificationServiceProvider).initializeForCurrentUser(); } catch (_) {}
-      }
+      try { await ref.read(pushNotificationServiceProvider).initializeForCurrentUser(); } catch (_) {}
       if (mounted) context.go(widget.driverMode ? '/driver' : '/passenger');
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
