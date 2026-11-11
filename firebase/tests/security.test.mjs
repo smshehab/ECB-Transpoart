@@ -10,56 +10,43 @@ before(async () => {
 });
 after(async () => { await env.cleanup(); });
 
-test('passenger can create and read own profile but cannot grant admin role', async () => {
-  const db = env.authenticatedContext('passenger-1', { email: 'passenger@example.test' }).firestore();
-  await assertSucceeds(setDoc(doc(db, 'users/passenger-1'), {
-    displayName: 'Passenger', email: 'passenger@example.test', createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+test('a normal user can create and read their own profile but cannot change role', async () => {
+  const db = env.authenticatedContext('user-1', { email: 'user@example.test', role: 'user' }).firestore();
+  await assertSucceeds(setDoc(doc(db, 'users/user-1'), {
+    displayName: 'Normal User',
+    email: 'user@example.test',
+    role: 'user',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   }));
-  await assertSucceeds(getDoc(doc(db, 'users/passenger-1')));
-  await assertFails(updateDoc(doc(db, 'users/passenger-1'), { role: 'super_admin' }));
+  await assertSucceeds(getDoc(doc(db, 'users/user-1')));
+  await assertFails(updateDoc(doc(db, 'users/user-1'), { role: 'admin' }));
 });
 
-test('unauthenticated users cannot read fleet records', async () => {
+test('a guest can read public transport data but cannot write it', async () => {
   await env.withSecurityRulesDisabled(async context => {
-    await setDoc(doc(context.firestore(), 'buses/bus-1'), { name: 'Test Bus' });
+    await setDoc(doc(context.firestore(), 'buses/public-bus'), { name: 'Public Bus' });
   });
-  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), 'buses/bus-1')));
+  const guestDb = env.unauthenticatedContext().firestore();
+  await assertSucceeds(getDoc(doc(guestDb, 'buses/public-bus')));
+  await assertFails(setDoc(doc(guestDb, 'buses/guest-write'), { name: 'Not allowed' }));
 });
 
-test('only administrators can create fleet records', async () => {
-  const passengerDb = env.authenticatedContext('passenger-2', { email: 'p2@example.test' }).firestore();
-  const adminDb = env.authenticatedContext('admin-1', { role: 'transport_admin' }).firestore();
-  await assertFails(setDoc(doc(passengerDb, 'buses/bus-2'), { name: 'Unauthorized' }));
-  await assertSucceeds(setDoc(doc(adminDb, 'buses/bus-3'), { name: 'Authorized' }));
+test('only ADMIN can create or modify fleet records', async () => {
+  const userDb = env.authenticatedContext('user-2', { role: 'user' }).firestore();
+  const adminDb = env.authenticatedContext('admin-1', { role: 'admin' }).firestore();
+  await assertFails(setDoc(doc(userDb, 'buses/user-bus'), { name: 'Unauthorized' }));
+  await assertSucceeds(setDoc(doc(adminDb, 'buses/admin-bus'), { name: 'Authorized' }));
 });
 
-
-test('only the assigned driver claim can perform permitted trip state changes', async () => {
-  await env.withSecurityRulesDisabled(async context => {
-    await setDoc(doc(context.firestore(), 'trips/trip-1'), {
-      driverId: 'driver-1', busId: 'bus-1', status: 'scheduled',
-    });
-  });
-  const passengerDb = env.authenticatedContext('driver-1', { role: 'passenger' }).firestore();
-  const driverDb = env.authenticatedContext('driver-1', { role: 'driver' }).firestore();
-  await assertFails(updateDoc(doc(passengerDb, 'trips/trip-1'), { status: 'active' }));
-  await assertSucceeds(updateDoc(doc(driverDb, 'trips/trip-1'), { status: 'active', startedAt: serverTimestamp() }));
-  await assertFails(updateDoc(doc(driverDb, 'trips/trip-1'), { busId: 'other-bus' }));
-  await assertSucceeds(updateDoc(doc(driverDb, 'trips/trip-1'), { status: 'completed', completedAt: serverTimestamp() }));
+test('only ADMIN can change trip records', async () => {
+  const userDb = env.authenticatedContext('user-3', { role: 'user' }).firestore();
+  const adminDb = env.authenticatedContext('admin-2', { role: 'admin' }).firestore();
+  await assertFails(setDoc(doc(userDb, 'trips/user-trip'), { busId: 'bus-1', status: 'scheduled' }));
+  await assertSucceeds(setDoc(doc(adminDb, 'trips/admin-trip'), { busId: 'bus-1', status: 'scheduled' }));
 });
 
-test('trip records are visible only to the assigned driver and administrators', async () => {
-  await env.withSecurityRulesDisabled(async context => {
-    await setDoc(doc(context.firestore(), 'trips/private-trip'), {
-      driverId: 'assigned-driver', busId: 'bus-private', status: 'active',
-    });
-  });
-  const passengerDb = env.authenticatedContext('passenger-9', { role: 'passenger' }).firestore();
-  const otherDriverDb = env.authenticatedContext('other-driver', { role: 'driver' }).firestore();
-  const assignedDriverDb = env.authenticatedContext('assigned-driver', { role: 'driver' }).firestore();
-  const adminDb = env.authenticatedContext('admin-9', { role: 'transport_admin' }).firestore();
-  await assertFails(getDoc(doc(passengerDb, 'trips/private-trip')));
-  await assertFails(getDoc(doc(otherDriverDb, 'trips/private-trip')));
-  await assertSucceeds(getDoc(doc(assignedDriverDb, 'trips/private-trip')));
-  await assertSucceeds(getDoc(doc(adminDb, 'trips/private-trip')));
+test('legacy privileged role names do not grant ADMIN permissions', async () => {
+  const legacyAdmin = env.authenticatedContext('legacy-admin', { role: 'transport_admin' }).firestore();
+  await assertFails(setDoc(doc(legacyAdmin, 'buses/legacy-write'), { name: 'Not allowed' }));
 });
