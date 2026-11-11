@@ -21,6 +21,7 @@ coverage/
 # Firebase secrets and local configuration
 .env
 .env.*
+**/firebase_config.json
 !.env.example
 **/firebase_options.dart
 **/google-services.json
