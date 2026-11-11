@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,13 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   var ready = false;
   Object? error;
-  try { await Firebase.initializeApp(options: EcbFirebaseOptions.current); ready = true; } catch (exception) { error = exception; }
+  try {
+    await Firebase.initializeApp(options: EcbFirebaseOptions.current);
+    if (EcbFirebaseOptions.appCheckSiteKey.isNotEmpty) {
+      await FirebaseAppCheck.instance.activate(webProvider: ReCaptchaV3Provider(EcbFirebaseOptions.appCheckSiteKey));
+    }
+    ready = true;
+  } catch (exception) { error = exception; }
   runApp(ProviderScope(child: EcbAdminApp(firebaseReady: ready, firebaseError: error)));
 }
 
