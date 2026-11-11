@@ -78,6 +78,7 @@ class LocationTrackingService {
       final reference = _database.ref('live_buses/$busId');
       if (completed) {
         await reference.remove();
+        await _database.ref('driver_assignments/${_auth.currentUser!.uid}').update({'activeTripId': null});
       } else {
         await reference.update({'status': 'paused', 'updatedAt': ServerValue.timestamp});
       }
