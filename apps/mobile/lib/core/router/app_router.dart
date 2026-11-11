@@ -13,6 +13,7 @@ GoRouter createAppRouter({required bool firebaseReady, Object? firebaseError}) {
   return GoRouter(initialLocation: '/', routes: [
     GoRoute(path: '/', builder: (context, state) => _WelcomeScreen(firebaseReady: firebaseReady, firebaseError: firebaseError)),
     GoRoute(path: '/login', builder: (context, state) => const AuthScreen(register: false)),
+    GoRoute(path: '/driver/login', builder: (context, state) => const AuthScreen(register: false, driverMode: true)),
     GoRoute(path: '/register', builder: (context, state) => const AuthScreen(register: true)),
     GoRoute(path: '/passenger', builder: (context, state) => const PassengerHomeScreen()),
     GoRoute(path: '/driver', builder: (context, state) => const DriverDashboardScreen()),
@@ -44,7 +45,7 @@ class _WelcomeScreen extends StatelessWidget {
         const SizedBox(height: 16),
         FilledButton.icon(onPressed: firebaseReady ? () => context.go('/login') : null, icon: const Icon(Icons.login), label: const Text('Sign in')),
         OutlinedButton.icon(onPressed: firebaseReady ? () => context.go('/register') : null, icon: const Icon(Icons.person_add_alt), label: const Text('Create passenger account')),
-        TextButton(onPressed: firebaseReady ? () => context.go('/driver') : null, child: const Text('Driver workspace')),
+        TextButton(onPressed: firebaseReady ? () => context.go('/driver/login') : null, child: const Text('Driver sign in')),
       ]),
     )))));
   }
