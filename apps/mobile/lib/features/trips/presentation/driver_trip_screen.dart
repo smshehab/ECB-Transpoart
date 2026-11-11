@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'trip_providers.dart';
 import '../../tracking/presentation/tracking_providers.dart';
+import 'trip_providers.dart';
 
 class DriverTripScreen extends ConsumerWidget {
   const DriverTripScreen({super.key});
