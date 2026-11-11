@@ -31,7 +31,7 @@ The local `firebase_config.json` is ignored by Git. Never commit service-account
 
 ## Roles and provisioning
 
-Passenger accounts can self-register. Drivers and administrators must be provisioned by a trusted Firebase administrative process and receive custom claims (`driver`, `transport_admin`, or `super_admin`). Driver-to-bus and active-trip assignment mirrors in RTDB must be written by an administrator. The admin web tool validates the active Firestore trip before activating the RTDB tracking assignment. Drivers can only clear their own active assignment when completing a trip.
+Passenger accounts can self-register. Drivers and administrators must be provisioned by a trusted Firebase administrative process and receive custom claims (`driver`, `transport_admin`, or `super_admin`). A local Python Admin SDK utility is provided at `tools/provision_user_role.py`; see `docs/deployment/role_provisioning.md`. Driver-to-bus and active-trip assignment mirrors in RTDB must be written by an administrator. The admin web tool validates the active Firestore trip before activating the RTDB tracking assignment. Drivers can only clear their own active assignment when completing a trip.
 
 ## Current feature coverage
 
