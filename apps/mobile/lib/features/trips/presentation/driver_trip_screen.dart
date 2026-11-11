@@ -36,7 +36,7 @@ class DriverTripScreen extends ConsumerWidget {
                           final busId = data['busId'] as String?;
                           if (busId == null || busId.isEmpty) throw StateError('This trip has no assigned bus. Contact transport administration.');
                           await repository.startTrip(tripId: doc.id);
-                          await ref.read(locationTrackingServiceProvider).start(busId: busId, tripId: doc.id);
+                          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Trip started. Ask an administrator to activate tracking, then start GPS sharing.')));
                         }
                         if (action == 'pause') {
                           await repository.pauseTrip(tripId: doc.id);
