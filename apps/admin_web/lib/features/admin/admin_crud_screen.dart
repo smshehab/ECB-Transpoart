@@ -34,7 +34,11 @@ class _AdminCrudScreenState extends State<AdminCrudScreen> {
     final nameController = TextEditingController(text: data.remove('name') as String? ?? '');
     data.remove('createdAt');
     data.remove('updatedAt');
-    final detailsController = TextEditingController(text: const JsonEncoder.withIndent('  ').convert(data));
+    final detailsController = TextEditingController(text: jsonEncode(data, toEncodable: (value) {
+      if (value is Timestamp) return value.toDate().toIso8601String();
+      if (value is GeoPoint) return {'latitude': value.latitude, 'longitude': value.longitude};
+      return value.toString();
+    }));
     final saved = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
       title: Text('Edit ${widget.title.toLowerCase()}'),
       content: SizedBox(width: 460, child: Column(mainAxisSize: MainAxisSize.min, children: [
