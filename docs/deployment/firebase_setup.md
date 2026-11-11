@@ -5,7 +5,7 @@
 1. Create a Firebase project and register Android, iOS, and Web applications.
 2. Enable Email/Password in Authentication.
 3. Create Cloud Firestore, Realtime Database, and Storage in the intended region.
-4. Copy `firebase/firebase_config.example.json` to `firebase/firebase_config.json` and replace every placeholder with the client configuration values from Firebase project settings. This file is ignored by Git.
+4. Copy `firebase/firebase_config.example.json` to `firebase/firebase_config.json` and replace the placeholders with the correct client configuration values from Firebase project settings. Use the Android, iOS, and Web app IDs separately; the API key, project ID, sender ID, database URL, and storage bucket belong to the Firebase project. This file is ignored by Git.
 5. Build from the relevant app directory with `--dart-define-from-file=../../firebase/firebase_config.json`.
 6. Enable App Check. Add a reCAPTCHA v3 site key to `FIREBASE_APP_CHECK_SITE_KEY` for Web. For Android release builds configure Play Integrity; for iOS configure DeviceCheck/App Attest as appropriate. Debug builds use the Firebase App Check debug provider; register its debug token in the Firebase console.
 7. Deploy rules and indexes from the repository root using `firebase deploy --config firebase/firebase.json --only firestore:rules,firestore:indexes,database,storage` after reviewing the project and database instance.
