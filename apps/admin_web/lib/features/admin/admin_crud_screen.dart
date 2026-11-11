@@ -85,7 +85,7 @@ class _AdminCrudScreenState extends State<AdminCrudScreen> {
     }
   }
 
-  bool get _readOnly => widget.collection == 'users' || widget.collection == 'trips';
+  bool get _readOnly => widget.collection == 'users';
 
   @override
   Widget build(BuildContext context) {
