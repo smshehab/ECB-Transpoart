@@ -1,11 +1,11 @@
 {
   "rules": {
     ".read": false,
-        ".write": "auth != null && auth.token.role === 'driver' && root.child('driver_assignments').child(auth.uid).child('busId').val() === $busId && root.child('driver_assignments').child(auth.uid).child('activeTripId').val() === (newData.exists() ? newData.child('tripId').val() : data.child('tripId').val()) && (newData.exists() ? newData.child('driverId').val() === auth.uid : data.child('driverId').val() === auth.uid)",
+    ".write": false,
     "live_buses": {
       "$busId": {
         ".read": "auth != null",
-        ".write": "auth != null && root.child('driver_assignments').child(auth.uid).child('busId').val() === $busId && newData.child('driverId').val() === auth.uid && root.child('driver_assignments').child(auth.uid).child('activeTripId').val() === newData.child('tripId').val()",
+        ".write": "auth != null && auth.token.role === 'driver' && root.child('driver_assignments').child(auth.uid).child('busId').val() === $busId && root.child('driver_assignments').child(auth.uid).child('activeTripId').val() === (newData.exists() ? newData.child('tripId').val() : data.child('tripId').val()) && (newData.exists() ? newData.child('driverId').val() === auth.uid : data.child('driverId').val() === auth.uid)",
         ".validate": "newData.hasChildren(['latitude', 'longitude', 'updatedAt', 'tripId', 'driverId', 'status'])",
         "latitude": {
           ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
@@ -39,7 +39,7 @@
     "driver_assignments": {
       "$driverId": {
         ".read": "auth != null && (auth.uid === $driverId || auth.token.role === 'transport_admin' || auth.token.role === 'super_admin')",
-        ".write": "auth != null && (auth.token.role === 'transport_admin' || auth.token.role === 'super_admin')"
+        ".write": "auth != null && ((auth.uid === $driverId && auth.token.role === 'driver' && data.child('activeTripId').exists() && !newData.child('activeTripId').exists() && newData.child('busId').val() === data.child('busId').val()) || auth.token.role === 'transport_admin' || auth.token.role === 'super_admin')"
       }
     }
   }
