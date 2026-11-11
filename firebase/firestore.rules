@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function role() { return signedIn() ? request.auth.token.role : null; }
+    function isAdmin() { return role() in ['super_admin', 'transport_admin']; }
+    function isSuperAdmin() { return role() == 'super_admin'; }
+    function owns(uid) { return signedIn() && request.auth.uid == uid; }
+
+    match /users/{uid} {
+      allow read: if owns(uid) || isAdmin();
+      allow create: if owns(uid)
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'photoUrl', 'createdAt', 'updatedAt'])
+        && request.resource.data.email == request.auth.token.email;
+      allow update: if owns(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoUrl', 'updatedAt']);
+      allow delete: if isSuperAdmin();
+    }
+
+    match /drivers/{driverId} {
+      allow read: if owns(driverId) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /buses/{busId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /routes/{routeId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+      match /stops/{stopId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+    }
+
+    match /schedules/{scheduleId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /trips/{tripId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if isAdmin();
+    }
+
+    match /app_settings/{settingId} {
+      allow read: if signedIn();
+      allow write: if isSuperAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
