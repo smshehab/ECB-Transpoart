@@ -50,7 +50,7 @@ class DriverTripScreen extends ConsumerWidget {
                         }
                         if (action == 'complete') {
                           await repository.completeTrip(tripId: doc.id);
-                          await ref.read(locationTrackingServiceProvider).stop();
+                          await ref.read(locationTrackingServiceProvider).stop(completed: true);
                         }
                       } catch (error) {
                         if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
