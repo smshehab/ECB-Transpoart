@@ -14,7 +14,7 @@ import '../../features/tracking/presentation/driver_gps_screen.dart';
 import '../../features/trips/presentation/driver_trip_screen.dart';
 
 GoRouter createAppRouter({required bool firebaseReady, Object? firebaseError}) {
-  final authRefresh = _AuthRefreshNotifier();
+  final authRefresh = firebaseReady ? _AuthRefreshNotifier() : null;
   return GoRouter(
     initialLocation: '/',
     refreshListenable: authRefresh,
