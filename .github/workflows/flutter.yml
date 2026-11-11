@@ -34,6 +34,11 @@ jobs:
       - name: Unit tests
         working-directory: apps/mobile
         run: flutter test
+      - name: Android integration smoke test
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          script: cd apps/mobile && flutter test integration_test
       - name: Android debug build
         working-directory: apps/mobile
         run: flutter build apk --debug --dart-define-from-file=../../firebase/firebase_config.example.json
