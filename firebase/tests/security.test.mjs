@@ -47,3 +47,19 @@ test('only the assigned driver claim can perform permitted trip state changes', 
   await assertFails(updateDoc(doc(driverDb, 'trips/trip-1'), { busId: 'other-bus' }));
   await assertSucceeds(updateDoc(doc(driverDb, 'trips/trip-1'), { status: 'completed', completedAt: serverTimestamp() }));
 });
+
+test('trip records are visible only to the assigned driver and administrators', async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), 'trips/private-trip'), {
+      driverId: 'assigned-driver', busId: 'bus-private', status: 'active',
+    });
+  });
+  const passengerDb = env.authenticatedContext('passenger-9', { role: 'passenger' }).firestore();
+  const otherDriverDb = env.authenticatedContext('other-driver', { role: 'driver' }).firestore();
+  const assignedDriverDb = env.authenticatedContext('assigned-driver', { role: 'driver' }).firestore();
+  const adminDb = env.authenticatedContext('admin-9', { role: 'transport_admin' }).firestore();
+  await assertFails(getDoc(doc(passengerDb, 'trips/private-trip')));
+  await assertFails(getDoc(doc(otherDriverDb, 'trips/private-trip')));
+  await assertSucceeds(getDoc(doc(assignedDriverDb, 'trips/private-trip')));
+  await assertSucceeds(getDoc(doc(adminDb, 'trips/private-trip')));
+});
