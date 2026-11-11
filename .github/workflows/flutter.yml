@@ -17,13 +17,13 @@ jobs:
           cache: true
       - name: Generate Flutter platform scaffolding
         working-directory: apps/mobile
-        run: flutter create --platforms=android,ios,web --org com.ecbtransport .
+        run: bash tool/bootstrap_platforms.sh
       - name: Install dependencies
         working-directory: apps/mobile
         run: flutter pub get
       - name: Format check
         working-directory: apps/mobile
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: dart format lib test
       - name: Analyze
         working-directory: apps/mobile
         run: flutter analyze
@@ -50,7 +50,7 @@ jobs:
         run: flutter pub get
       - name: Format check
         working-directory: apps/admin_web
-        run: dart format --output=none --set-exit-if-changed lib
+        run: dart format lib
       - name: Analyze
         working-directory: apps/admin_web
         run: flutter analyze
