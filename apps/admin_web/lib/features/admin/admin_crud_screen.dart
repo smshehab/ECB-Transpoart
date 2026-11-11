@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -12,24 +14,51 @@ class AdminCrudScreen extends StatefulWidget {
 
 class _AdminCrudScreenState extends State<AdminCrudScreen> {
   final _name = TextEditingController();
+  final _details = TextEditingController();
   bool _saving = false;
 
   @override
-  void dispose() { _name.dispose(); super.dispose(); }
+  void dispose() { _name.dispose(); _details.dispose(); super.dispose(); }
+
+  Map<String, dynamic> _parseDetails(String value) {
+    final decoded = jsonDecode(value.trim().isEmpty ? '{}' : value);
+    if (decoded is! Map) throw const FormatException('Additional fields must be a JSON object.');
+    final fields = Map<String, dynamic>.from(decoded);
+    const reserved = {'name', 'createdAt', 'updatedAt'};
+    if (fields.keys.any(reserved.contains)) throw const FormatException('Do not include name or timestamp fields in additional JSON.');
+    return fields;
+  }
 
   Future<void> _edit(DocumentSnapshot<Map<String, dynamic>> document) async {
-    final controller = TextEditingController(text: document.data()?['name'] as String? ?? '');
-    final value = await showDialog<String>(context: context, builder: (context) => AlertDialog(
+    final data = Map<String, dynamic>.from(document.data() ?? {});
+    final nameController = TextEditingController(text: data.remove('name') as String? ?? '');
+    data.remove('createdAt');
+    data.remove('updatedAt');
+    final detailsController = TextEditingController(text: const JsonEncoder.withIndent('  ').convert(data));
+    final saved = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
       title: Text('Edit ${widget.title.toLowerCase()}'),
-      content: TextField(controller: controller, autofocus: true, decoration: const InputDecoration(labelText: 'Name')),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: const Text('Save'))],
+      content: SizedBox(width: 460, child: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextField(controller: nameController, autofocus: true, decoration: const InputDecoration(labelText: 'Name')),
+        const SizedBox(height: 12),
+        TextField(controller: detailsController, minLines: 3, maxLines: 8, decoration: const InputDecoration(labelText: 'Additional fields (JSON object)')),
+      ])),
+      actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save'))],
     ));
-    if (value == null || value.isEmpty) { controller.dispose(); return; }
-    try {
-      await document.reference.update({'name': value, 'updatedAt': FieldValue.serverTimestamp()});
-    } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $error')));
-    } finally { controller.dispose(); }
+    if (saved == true) {
+      try {
+        final name = nameController.text.trim();
+        if (name.isEmpty) throw const FormatException('Name is required.');
+        await document.reference.update({
+          'name': name,
+          ..._parseDetails(detailsController.text),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } catch (error) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $error')));
+      }
+    }
+    nameController.dispose();
+    detailsController.dispose();
   }
 
   Future<void> _create() async {
@@ -39,10 +68,12 @@ class _AdminCrudScreenState extends State<AdminCrudScreen> {
     try {
       await FirebaseFirestore.instance.collection(widget.collection).add({
         'name': name,
+        ..._parseDetails(_details.text),
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
       _name.clear();
+      _details.clear();
     } catch (error) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Save failed: $error')));
     } finally {
