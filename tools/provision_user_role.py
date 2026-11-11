@@ -27,7 +27,9 @@ def main():
         firebase_admin.initialize_app(credential)
 
     user = auth.get_user_by_email(args.email)
-    auth.set_custom_user_claims(user.uid, {"role": args.role})
+    claims = dict(user.custom_claims or {})
+    claims["role"] = args.role
+    auth.set_custom_user_claims(user.uid, claims)
 
     print(f"Updated role for {user.email}: {args.role}")
     print("The user must sign out and sign in again to refresh the ID token.")
