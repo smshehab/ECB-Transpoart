@@ -6,12 +6,12 @@ import firebase_admin
 from firebase_admin import auth, credentials
 
 
-ALLOWED_ROLES = ("passenger", "driver", "transport_admin", "super_admin")
+ALLOWED_ROLES = ("user", "admin")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Assign a Firebase Authentication custom role to an existing user."
+        description="Assign an ADMIN or USER Firebase Authentication custom claim."
     )
     parser.add_argument("--email", required=True, help="Existing Firebase user email")
     parser.add_argument("--role", required=True, choices=ALLOWED_ROLES)
@@ -27,9 +27,7 @@ def main():
         firebase_admin.initialize_app(credential)
 
     user = auth.get_user_by_email(args.email)
-    claims = dict(user.custom_claims or {})
-    claims["role"] = args.role
-    auth.set_custom_user_claims(user.uid, claims)
+    auth.set_custom_user_claims(user.uid, {"role": args.role})
 
     print(f"Updated role for {user.email}: {args.role}")
     print("The user must sign out and sign in again to refresh the ID token.")
