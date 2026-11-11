@@ -39,12 +39,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         await repository.register(name: _name.text, email: _email.text, password: _password.text);
       } else {
         final credential = await repository.signIn(email: _email.text, password: _password.text);
-        if (widget.driverMode) {
-          final claims = await credential.user?.getIdTokenResult(true);
-          if (claims?.claims?['role'] != 'driver') {
-            await repository.signOut();
-            throw StateError('This account is not provisioned as a driver. Contact transport administration.');
-          }
+        final claims = await credential.user?.getIdTokenResult(true);
+        final role = claims?.claims?['role'];
+        final allowed = widget.driverMode
+            ? role == 'driver'
+            : role == null || role == 'passenger';
+        if (!allowed) {
+          await repository.signOut();
+          throw StateError(widget.driverMode
+              ? 'This account is not provisioned as a driver. Contact transport administration.'
+              : 'This account is not a passenger account. Use the correct sign-in portal.');
         }
       }
       try {
