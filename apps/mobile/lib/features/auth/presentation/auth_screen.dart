@@ -5,8 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'auth_providers.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
-  const AuthScreen({required this.register, super.key});
+  const AuthScreen({required this.register, this.driverMode = false, super.key});
   final bool register;
+  final bool driverMode;
 
   @override
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
@@ -36,9 +37,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (widget.register) {
         await repository.register(name: _name.text, email: _email.text, password: _password.text);
       } else {
-        await repository.signIn(email: _email.text, password: _password.text);
+        final credential = await repository.signIn(email: _email.text, password: _password.text);
+        if (widget.driverMode) {
+          final claims = await credential.user?.getIdTokenResult(true);
+          if (claims?.claims?['role'] != 'driver') {
+            await repository.signOut();
+            throw StateError('This account is not provisioned as a driver. Contact transport administration.');
+          }
+        }
       }
-      if (mounted) context.go('/');
+      if (mounted) context.go(widget.driverMode ? '/driver' : '/passenger');
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
     } finally {
