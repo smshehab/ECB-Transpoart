@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -23,7 +24,30 @@ class LocationTrackingService {
     }
 
     await stop();
-    const settings = LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 15, timeLimit: Duration(seconds: 30));
+    final LocationSettings settings;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      settings = AndroidSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 15,
+        intervalDuration: const Duration(seconds: 10),
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
+          notificationTitle: 'ECB Transport location sharing',
+          notificationText: 'Your location is shared during your active trip.',
+          enableWakeLock: true,
+          setOngoing: true,
+        ),
+      );
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      settings = AppleSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 15,
+        activityType: ActivityType.automotiveNavigation,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
+      );
+    } else {
+      settings = const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 15);
+    }
     _subscription = Geolocator.getPositionStream(locationSettings: settings).listen((position) async {
       if (position.accuracy > 80) return;
       final reference = _database.ref('live_buses/$busId');
