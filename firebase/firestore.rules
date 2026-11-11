@@ -43,12 +43,24 @@ service cloud.firestore {
 
     match /trips/{tripId} {
       allow read: if signedIn();
-      allow create, update, delete: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (signedIn() && resource.data.driverId == request.auth.uid
+        && resource.data.status in ['scheduled', 'active', 'paused']
+        && request.resource.data.driverId == resource.data.driverId
+        && request.resource.data.busId == resource.data.busId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'startedAt', 'completedAt', 'updatedAt'])
+        && ((resource.data.status == 'scheduled' && request.resource.data.status == 'active')
+          || (resource.data.status == 'active' && request.resource.data.status in ['paused', 'completed'])
+          || (resource.data.status == 'paused' && request.resource.data.status == 'active')));
     }
 
     match /announcements/{announcementId} {
       allow read: if signedIn();
       allow write: if isAdmin();
+    }
+
+    match /users/{uid}/notification_tokens/{tokenId} {
+      allow read, create, update, delete: if owns(uid);
     }
 
     match /notifications/{notificationId} {
