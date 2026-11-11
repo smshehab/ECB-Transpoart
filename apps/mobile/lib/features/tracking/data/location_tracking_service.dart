@@ -65,7 +65,7 @@ class LocationTrackingService {
         'status': 'active',
       });
     }, onError: (Object error) {
-      stop();
+      unawaited(stop());
     });
   }
 
