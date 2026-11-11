@@ -6,9 +6,9 @@ import '../../notifications/presentation/notification_providers.dart';
 import 'auth_providers.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
-  const AuthScreen({required this.register, this.driverMode = false, super.key});
+  const AuthScreen({required this.register, super.key});
+
   final bool register;
-  final bool driverMode;
 
   @override
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
@@ -32,31 +32,24 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _busy = true; _error = null; });
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     try {
       final repository = ref.read(authRepositoryProvider);
       if (widget.register) {
         await repository.register(name: _name.text, email: _email.text, password: _password.text);
       } else {
         final credential = await repository.signIn(email: _email.text, password: _password.text);
-        final claims = await credential.user?.getIdTokenResult(true);
-        final role = claims?.claims?['role'];
-        final allowed = widget.driverMode
-            ? role == 'driver'
-            : role == null || role == 'passenger';
-        if (!allowed) {
-          await repository.signOut();
-          throw StateError(widget.driverMode
-              ? 'This account is not provisioned as a driver. Contact transport administration.'
-              : 'This account is not a passenger account. Use the correct sign-in portal.');
-        }
+        await credential.user?.getIdToken(true);
       }
       try {
         await ref.read(pushNotificationServiceProvider).initializeForCurrentUser();
       } catch (error) {
         if (mounted) setState(() => _error = 'Signed in, but notification setup failed: $error');
       }
-      if (mounted) context.go(widget.driverMode ? '/driver' : '/passenger');
+      if (mounted) context.go('/passenger');
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
     } finally {
@@ -66,7 +59,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.register ? 'Create passenger account' : 'Sign in';
+    final title = widget.register ? 'Create user account' : 'Sign in';
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(
@@ -82,24 +75,57 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   Text(title, style: Theme.of(context).textTheme.headlineMedium),
                   const SizedBox(height: 24),
                   if (widget.register) ...[
-                    TextFormField(controller: _name, decoration: const InputDecoration(labelText: 'Full name'), validator: (v) => (v == null || v.trim().length < 2) ? 'Enter your name' : null),
+                    TextFormField(
+                      controller: _name,
+                      decoration: const InputDecoration(labelText: 'Full name'),
+                      validator: (value) => value == null || value.trim().length < 2 ? 'Enter your name' : null,
+                    ),
                     const SizedBox(height: 12),
                   ],
-                  TextFormField(controller: _email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email'), validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null),
+                  TextFormField(
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    validator: (value) => value == null || !value.contains('@') ? 'Enter a valid email' : null,
+                  ),
                   const SizedBox(height: 12),
-                  TextFormField(controller: _password, obscureText: true, decoration: const InputDecoration(labelText: 'Password'), validator: (v) => (v == null || v.length < 6) ? 'Use at least 6 characters' : null),
+                  TextFormField(
+                    controller: _password,
+                    obscureText: true,
+                    decoration: const InputDecoration(labelText: 'Password'),
+                    validator: (value) => value == null || value.length < 6 ? 'Use at least 6 characters' : null,
+                  ),
                   if (_error != null) ...[
                     const SizedBox(height: 12),
                     Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                   ],
                   const SizedBox(height: 20),
-                  FilledButton(onPressed: _busy ? null : _submit, child: Text(_busy ? 'Please wait…' : title)),
-                  TextButton(onPressed: _busy ? null : () => context.go(widget.register ? '/login' : '/register'), child: Text(widget.register ? 'Already have an account? Sign in' : 'Create a passenger account')),
-                  TextButton(onPressed: _busy ? null : () async {
-                    if (_email.text.trim().isEmpty) { setState(() => _error = 'Enter your email first.'); return; }
-                    try { await ref.read(authRepositoryProvider).sendPasswordReset(_email.text); if (mounted) setState(() => _error = 'Password reset email sent.'); }
-                    catch (error) { if (mounted) setState(() => _error = error.toString()); }
-                  }, child: const Text('Forgot password?')),
+                  FilledButton(
+                    onPressed: _busy ? null : _submit,
+                    child: Text(_busy ? 'Please wait…' : title),
+                  ),
+                  TextButton(
+                    onPressed: _busy ? null : () => context.go(widget.register ? '/login' : '/register'),
+                    child: Text(widget.register ? 'Already have an account? Sign in' : 'Create a user account'),
+                  ),
+                  if (!widget.register)
+                    TextButton(
+                      onPressed: _busy
+                          ? null
+                          : () async {
+                              if (_email.text.trim().isEmpty) {
+                                setState(() => _error = 'Enter your email first.');
+                                return;
+                              }
+                              try {
+                                await ref.read(authRepositoryProvider).sendPasswordReset(_email.text);
+                                if (mounted) setState(() => _error = 'Password reset email sent.');
+                              } catch (error) {
+                                if (mounted) setState(() => _error = error.toString());
+                              }
+                            },
+                      child: const Text('Forgot password?'),
+                    ),
                 ],
               ),
             ),
