@@ -1,0 +1,33 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+.pub-cache/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+coverage/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Platform generated files
+**/Generated.xcconfig
+**/flutter_export_environment.sh
+**/ ephemeral/
+
+# Firebase secrets and local configuration
+.env
+.env.*
+!.env.example
+**/firebase_options.dart
+**/google-services.json
+**/GoogleService-Info.plist
+**/service-account*.json
+.firebase/
+
+# OS
+.DS_Store
+Thumbs.db
