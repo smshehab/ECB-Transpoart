@@ -6,12 +6,12 @@ import firebase_admin
 from firebase_admin import auth, credentials
 
 
-ALLOWED_ROLES = ("passenger", "driver", "transport_admin", "super_admin")
+ALLOWED_ROLES = ("user", "admin")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Assign a Firebase Authentication custom role to an existing user."
+        description="Assign an ADMIN or USER Firebase Authentication custom claim."
     )
     parser.add_argument("--email", required=True, help="Existing Firebase user email")
     parser.add_argument("--role", required=True, choices=ALLOWED_ROLES)

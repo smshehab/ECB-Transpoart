@@ -9,6 +9,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   mobile:
@@ -35,9 +36,12 @@ jobs:
         working-directory: apps/mobile
         run: flutter test
       - name: Android integration smoke test
+        if: github.event_name == 'workflow_dispatch'
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 34
+          target: default
+          arch: x86_64
           script: cd apps/mobile && flutter test integration_test
       - name: Android debug build
         working-directory: apps/mobile

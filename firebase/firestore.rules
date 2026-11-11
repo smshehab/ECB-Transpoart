@@ -8,7 +8,8 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if owns(uid) || isAdmin();
       allow create: if owns(uid)
-        && request.resource.data.keys().hasOnly(['displayName', 'email', 'photoUrl', 'createdAt', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'role', 'photoUrl', 'createdAt', 'updatedAt'])
+        && request.resource.data.role == 'user'
         && request.resource.data.email == request.auth.token.email;
       allow update: if owns(uid)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoUrl', 'updatedAt']);

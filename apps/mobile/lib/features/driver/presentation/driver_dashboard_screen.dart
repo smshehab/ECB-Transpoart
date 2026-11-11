@@ -20,7 +20,7 @@ class DriverDashboardScreen extends StatelessWidget {
             Text('Driver tools', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 16),
             Card(child: ListTile(leading: const Icon(Icons.route), title: const Text('Assigned trips'), subtitle: const Text('View and update your assigned trip status'), onTap: () => context.go('/driver/trips'))),
-            Card(child: ListTile(leading: const Icon(Icons.gps_fixed), title: const Text('GPS sharing'), subtitle: const Text('Start or stop visible location sharing'), onTap: () => context.go('/driver/gps')),
+            Card(child: ListTile(leading: const Icon(Icons.gps_fixed), title: const Text('GPS sharing'), subtitle: const Text('Start or stop visible location sharing'), onTap: () => context.go('/driver/gps'))),
           ]),
         );
       },

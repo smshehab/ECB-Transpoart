@@ -57,7 +57,7 @@ class _AdminGate extends StatelessWidget {
         builder: (context, claims) {
           if (!claims.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
           final role = claims.data!.claims?['role'];
-          if (role != 'super_admin' && role != 'transport_admin') return const _AccessDeniedScreen();
+          if (role != 'admin') return const _AccessDeniedScreen();
           return const AdminDashboard();
         },
       );
@@ -84,7 +84,7 @@ class _AdminLoginScreenState extends State<_AdminLoginScreen> {
       final result = await FirebaseAuth.instance.signInWithEmailAndPassword(email: email.text.trim(), password: password.text);
       final claims = await result.user!.getIdTokenResult(true);
       final role = claims.claims?['role'];
-      if (role != 'super_admin' && role != 'transport_admin') {
+      if (role != 'admin') {
         await FirebaseAuth.instance.signOut();
         throw StateError('This account does not have administrator access.');
       }
