@@ -111,9 +111,9 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   int selected = 0;
   static const sections = [
-    ('Overview', 'buses'), ('Buses', 'buses'), ('Routes', 'routes'), ('Schedules', 'schedules'), ('Announcements', 'announcements'), ('Drivers', 'drivers'), ('Users', 'users'),
+    ('Overview', 'buses'), ('Buses', 'buses'), ('Routes', 'routes'), ('Schedules', 'schedules'), ('Announcements', 'announcements'), ('Drivers', 'drivers'), ('Trips', 'trips'), ('Users', 'users'),
   ];
-  static const icons = [Icons.dashboard_outlined, Icons.directions_bus_outlined, Icons.route_outlined, Icons.schedule_outlined, Icons.campaign_outlined, Icons.badge_outlined, Icons.people_outline];
+  static const icons = [Icons.dashboard_outlined, Icons.directions_bus_outlined, Icons.route_outlined, Icons.schedule_outlined, Icons.campaign_outlined, Icons.badge_outlined, Icons.route_outlined, Icons.people_outline];
 
   @override
   Widget build(BuildContext context) {
