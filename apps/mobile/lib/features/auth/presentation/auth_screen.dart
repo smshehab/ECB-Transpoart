@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'auth_providers.dart';
+import '../../notifications/presentation/notification_providers.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({required this.register, this.driverMode = false, super.key});
@@ -45,6 +46,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             throw StateError('This account is not provisioned as a driver. Contact transport administration.');
           }
         }
+      }
+      if (!widget.driverMode) {
+        try { await ref.read(pushNotificationServiceProvider).initializeForCurrentUser(); } catch (_) {}
       }
       if (mounted) context.go(widget.driverMode ? '/driver' : '/passenger');
     } catch (error) {
