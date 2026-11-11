@@ -17,6 +17,21 @@ class _AdminCrudScreenState extends State<AdminCrudScreen> {
   @override
   void dispose() { _name.dispose(); super.dispose(); }
 
+  Future<void> _edit(DocumentSnapshot<Map<String, dynamic>> document) async {
+    final controller = TextEditingController(text: document.data()?['name'] as String? ?? '');
+    final value = await showDialog<String>(context: context, builder: (context) => AlertDialog(
+      title: Text('Edit ${widget.title.toLowerCase()}'),
+      content: TextField(controller: controller, autofocus: true, decoration: const InputDecoration(labelText: 'Name')),
+      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: const Text('Save'))],
+    ));
+    if (value == null || value.isEmpty) { controller.dispose(); return; }
+    try {
+      await document.reference.update({'name': value, 'updatedAt': FieldValue.serverTimestamp()});
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $error')));
+    } finally { controller.dispose(); }
+  }
+
   Future<void> _create() async {
     final name = _name.text.trim();
     if (name.isEmpty) return;
@@ -51,10 +66,13 @@ class _AdminCrudScreenState extends State<AdminCrudScreen> {
             return Card(child: ListTile(
               title: Text(doc.data()['name'] as String? ?? doc.id),
               subtitle: Text(doc.id),
-              trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async {
+              trailing: Wrap(children: [
+                IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _edit(doc)),
+                IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async {
                 try { await doc.reference.delete(); }
                 catch (error) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $error'))); }
               }),
+              ]),
             ));
           });
         },
