@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'features/admin/admin_crud_screen.dart';
+import 'features/admin/tracking_assignment_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -119,9 +120,9 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   int selected = 0;
   static const sections = [
-    ('Overview', 'buses'), ('Buses', 'buses'), ('Routes', 'routes'), ('Schedules', 'schedules'), ('Announcements', 'announcements'), ('Drivers', 'drivers'), ('Trips', 'trips'), ('Users', 'users'),
+    ('Overview', 'buses'), ('Buses', 'buses'), ('Routes', 'routes'), ('Schedules', 'schedules'), ('Announcements', 'announcements'), ('Drivers', 'drivers'), ('Trips', 'trips'), ('Tracking assignment', 'assignment'), ('Users', 'users'),
   ];
-  static const icons = [Icons.dashboard_outlined, Icons.directions_bus_outlined, Icons.route_outlined, Icons.schedule_outlined, Icons.campaign_outlined, Icons.badge_outlined, Icons.route_outlined, Icons.people_outline];
+  static const icons = [Icons.dashboard_outlined, Icons.directions_bus_outlined, Icons.route_outlined, Icons.schedule_outlined, Icons.campaign_outlined, Icons.badge_outlined, Icons.route_outlined, Icons.gps_fixed, Icons.people_outline];
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +133,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       body: Row(children: [
         if (wide) NavigationRail(selectedIndex: selected, onDestinationSelected: (index) => setState(() => selected = index), labelType: NavigationRailLabelType.all, destinations: [for (var i = 0; i < sections.length; i++) NavigationRailDestination(icon: Icon(icons[i]), label: Text(sections[i].$1))]),
         if (wide) const VerticalDivider(width: 1),
-        Expanded(child: Padding(padding: const EdgeInsets.all(20), child: selected == 0 ? const _Overview() : AdminCrudScreen(collection: current.$2, title: current.$1))),
+        Expanded(child: Padding(padding: const EdgeInsets.all(20), child: selected == 0 ? const _Overview() : current.$2 == 'assignment' ? const TrackingAssignmentScreen() : AdminCrudScreen(collection: current.$2, title: current.$1))),
       ]),
       bottomNavigationBar: wide ? null : NavigationBar(selectedIndex: selected, onDestinationSelected: (index) => setState(() => selected = index), destinations: [for (var i = 0; i < sections.length; i++) NavigationDestination(icon: Icon(icons[i]), label: sections[i].$1)]),
     );
