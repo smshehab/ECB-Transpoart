@@ -15,19 +15,22 @@ class AuthRepository {
 
   Future<UserCredential> register({required String name, required String email, required String password}) async {
     final credential = await _auth.createUserWithEmailAndPassword(email: email.trim(), password: password);
-    await credential.user?.updateDisplayName(name.trim());
     final user = credential.user;
     if (user != null) {
+      await user.updateDisplayName(name.trim());
       await _firestore.collection('users').doc(user.uid).set({
         'displayName': name.trim(),
         'email': user.email,
+        'role': 'user',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      await user.getIdToken(true);
     }
     return credential;
   }
 
   Future<void> sendPasswordReset(String email) => _auth.sendPasswordResetEmail(email: email.trim());
+
   Future<void> signOut() => _auth.signOut();
 }
