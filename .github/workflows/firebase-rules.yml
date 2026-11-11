@@ -1,0 +1,24 @@
+name: Firebase Rules Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  firestore-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: firebase/package.json
+      - name: Install test dependencies
+        working-directory: firebase
+        run: npm install
+      - name: Run Firestore emulator tests
+        working-directory: firebase
+        run: npx --yes firebase-tools emulators:exec --only firestore --project ecb-transport-rules-test "npm test"
