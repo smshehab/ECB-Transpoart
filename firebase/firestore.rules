@@ -2,9 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function role() { return signedIn() ? request.auth.token.role : null; }
-    function isAdmin() { return role() in ['super_admin', 'transport_admin']; }
-    function isSuperAdmin() { return role() == 'super_admin'; }
+    function isAdmin() { return signedIn() && request.auth.token.role == 'admin'; }
     function owns(uid) { return signedIn() && request.auth.uid == uid; }
 
     match /users/{uid} {
@@ -14,48 +12,35 @@ service cloud.firestore {
         && request.resource.data.email == request.auth.token.email;
       allow update: if owns(uid)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoUrl', 'updatedAt']);
-      allow delete: if isSuperAdmin();
-    }
-
-    match /drivers/{driverId} {
-      allow read: if owns(driverId) || isAdmin();
-      allow write: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /buses/{busId} {
-      allow read: if signedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /routes/{routeId} {
-      allow read: if signedIn();
+      allow read: if true;
       allow write: if isAdmin();
       match /stops/{stopId} {
-        allow read: if signedIn();
+        allow read: if true;
         allow write: if isAdmin();
       }
     }
 
     match /schedules/{scheduleId} {
-      allow read: if signedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     match /trips/{tripId} {
-      allow read: if isAdmin() || (signedIn() && resource.data.driverId == request.auth.uid);
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin() || (signedIn() && request.auth.token.role == 'driver' && resource.data.driverId == request.auth.uid
-        && resource.data.status in ['scheduled', 'active', 'paused']
-        && request.resource.data.driverId == resource.data.driverId
-        && request.resource.data.busId == resource.data.busId
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'startedAt', 'completedAt', 'updatedAt'])
-        && ((resource.data.status == 'scheduled' && request.resource.data.status == 'active')
-          || (resource.data.status == 'active' && request.resource.data.status in ['paused', 'completed'])
-          || (resource.data.status == 'paused' && request.resource.data.status in ['active', 'completed'])));
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
     }
 
     match /announcements/{announcementId} {
-      allow read: if signedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
@@ -68,9 +53,21 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /sharing_sessions/{sessionId} {
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['userId', 'busId', 'tripId', 'startedAt', 'expiresAt', 'status']);
+      allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'expiresAt']);
+      allow delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+    }
+
     match /app_settings/{settingId} {
-      allow read: if signedIn();
-      allow write: if isSuperAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     match /{document=**} {

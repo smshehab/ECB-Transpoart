@@ -2,44 +2,28 @@
   "rules": {
     ".read": false,
     ".write": false,
-    "live_buses": {
-      "$busId": {
-        ".read": "auth != null",
-        ".write": "auth != null && auth.token.role === 'driver' && root.child('driver_assignments').child(auth.uid).child('busId').val() === $busId && root.child('driver_assignments').child(auth.uid).child('activeTripId').val() === (newData.exists() ? newData.child('tripId').val() : data.child('tripId').val()) && (newData.exists() ? newData.child('driverId').val() === auth.uid : data.child('driverId').val() === auth.uid)",
-        ".validate": "newData.hasChildren(['latitude', 'longitude', 'updatedAt', 'tripId', 'driverId', 'status'])",
-        "latitude": {
-          ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
-        },
-        "longitude": {
-          ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"
-        },
-        "speed": {
-          ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0)"
-        },
-        "heading": {
-          ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 360)"
-        },
-        "accuracy": {
-          ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0)"
-        },
-        "updatedAt": {
-          ".validate": "newData.isNumber()"
-        },
-        "tripId": {
-          ".validate": "newData.isString()"
-        },
-        "driverId": {
-          ".validate": "newData.isString()"
-        },
-        "status": {
-          ".validate": "newData.val() in ['active', 'paused']"
+    "trip_contributors": {
+      "$tripId": {
+        "$contributorId": {
+          ".read": true,
+          ".write": "auth != null && root.child('contributor_owners').child($contributorId).val() === auth.uid",
+          ".validate": "newData.hasChildren(['latitude', 'longitude', 'accuracy', 'updatedAt', 'sessionId', 'status'])",
+          "latitude": { ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90" },
+          "longitude": { ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180" },
+          "accuracy": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+          "speed": { ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 45)" },
+          "heading": { ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 360)" },
+          "updatedAt": { ".validate": "newData.isNumber()" },
+          "sessionId": { ".validate": "newData.isString()" },
+          "status": { ".validate": "newData.val() in ['sharing', 'stopped']" }
         }
       }
     },
-    "driver_assignments": {
-      "$driverId": {
-        ".read": "auth != null && (auth.uid === $driverId || auth.token.role === 'transport_admin' || auth.token.role === 'super_admin')",
-        ".write": "auth != null && ((auth.uid === $driverId && auth.token.role === 'driver' && data.child('activeTripId').exists() && !newData.child('activeTripId').exists() && newData.child('busId').val() === data.child('busId').val()) || auth.token.role === 'transport_admin' || auth.token.role === 'super_admin')"
+    "contributor_owners": {
+      "$contributorId": {
+        ".read": "auth != null && (data.val() === auth.uid || auth.token.role === 'admin')",
+        ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid) || data.val() === auth.uid)",
+        ".validate": "newData.isString()"
       }
     }
   }

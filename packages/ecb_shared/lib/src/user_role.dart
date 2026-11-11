@@ -1,8 +1,6 @@
 enum UserRole {
-  superAdmin('super_admin'),
-  transportAdmin('transport_admin'),
-  driver('driver'),
-  passenger('passenger');
+  admin('admin'),
+  user('user');
 
   const UserRole(this.claim);
 
@@ -15,5 +13,5 @@ enum UserRole {
     return null;
   }
 
-  bool get canManageTransport => this == UserRole.superAdmin || this == UserRole.transportAdmin;
+  bool get canManageTransport => this == UserRole.admin;
 }
