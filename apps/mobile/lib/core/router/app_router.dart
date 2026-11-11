@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/driver/presentation/driver_dashboard_screen.dart';
 import '../../features/map/presentation/live_bus_map_screen.dart';
+import '../../features/notifications/presentation/passenger_notifications_screen.dart';
 import '../../features/passenger/presentation/passenger_data_screen.dart';
 import '../../features/passenger/presentation/passenger_home_screen.dart';
 import '../../features/tracking/presentation/driver_gps_screen.dart';
@@ -21,7 +22,8 @@ GoRouter createAppRouter({required bool firebaseReady, Object? firebaseError}) {
     GoRoute(path: '/driver/gps', builder: (context, state) => const DriverGpsScreen()),
     GoRoute(path: '/map', builder: (context, state) => const LiveBusMapScreen()),
     GoRoute(path: '/routes', builder: (context, state) => const PassengerDataScreen(collection: 'routes', title: 'Routes')),
-    GoRoute(path: '/notifications', builder: (context, state) => const PassengerDataScreen(collection: 'announcements', title: 'Announcements')),
+    GoRoute(path: '/notifications', builder: (context, state) => const PassengerNotificationsScreen()),
+    GoRoute(path: '/announcements', builder: (context, state) => const PassengerDataScreen(collection: 'announcements', title: 'Announcements')),
   ]);
 }
 
